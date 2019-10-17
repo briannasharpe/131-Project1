@@ -1,0 +1,132 @@
+#! /usr/bin/env python3
+# -*-Python-*-
+
+import os, subprocess, sys
+
+HAVE_GITHUB = False
+try:
+    import github
+    HAVE_GITHUB = True
+except ImportError:
+    pass
+
+COMPILER = 'clang++'
+MEGABYTE = 1024 * 1024
+MAX_SOURCE_FILE_SIZE = 1 * MEGABYTE
+
+def print_divider():
+    print('-' * 79)
+
+def is_source_file(path):
+    if not os.path.isfile(path):
+        return False
+
+    st = os.stat(path)
+    size = st.st_size
+    if size > MAX_SOURCE_FILE_SIZE:
+        return False
+
+    return True
+
+# return True on success or False on failure
+def command(arg_list):
+    print(' '.join(arg_list))
+    return_code = subprocess.call(arg_list)
+    return (return_code == 0)
+
+# return a list of lines printed to stdout on success, or None on error
+def command_lines(arg_list):
+    print(' '.join(arg_list))
+    p = subprocess.Popen(arg_list,
+                         stdout=subprocess.PIPE,
+                         universal_newlines=True,
+                         close_fds=True)
+    stdout_str, stderr_str = p.communicate()
+    if p.returncode != 0:
+        return None
+    else:
+        return stdout_str.splitlines()
+
+class Contributor:
+    def __init__(self, name, emails):
+        self.name = name
+        self.emails = emails
+
+def find_contributors():
+    lines = command_lines(['git', 'shortlog', '-s', '-e'])
+    result = []
+    for line in lines:
+        name_and_email = line[7:]
+        name_part, email_part = name_and_email.split('<')
+        name = name_part.strip()
+        email = email_part.lstrip('<').rstrip('>')
+        result.append(Contributor(name, [email]))
+    return result
+
+# return True on success or False on failure
+def compile(source_path_list, library_name_list, output_path):
+    return command([COMPILER] +
+                   ['-g', '-std=c++11'] +
+                   source_path_list +
+                   ['-l' + lib for lib in library_name_list] +
+                   ['-o'] + output_path)
+
+def build():
+    return (compile(['main.cpp'],
+                   [],
+                   ['Project1exe']))
+
+def test():
+    return (build() and
+            command(['./Project1exe']))
+
+def team():
+    contribs = find_contributors()
+    print('The following git users have contributed to this repository:')
+    print_divider()
+    for contrib in contribs:
+        print('"' + contrib.name + '"', end="")
+        for email in contrib.emails:
+            print(' <' + email + '>', end="")
+        print('')
+    print_divider()
+    print('')
+
+def print_usage():
+    print('Usage:\n' +
+          '\n' +
+          '    critic <COMMAND>\n' +
+          '\n' +
+          'Commands:\n' +
+          '\n' +
+          '    build     compile and link\n'
+          '    help      print this usage information\n'
+          '    team      print team members\n'
+          '    test      compile, then run unit tests\n')
+
+def usage_error():
+    print_usage()
+    sys.exit(1)
+
+def main():
+    if len(sys.argv) != 2:
+        usage_error()
+    command = sys.argv[1]
+    if command == 'build':
+        success = build()
+    elif command == 'help':
+        print_usage()
+        success = True
+    elif command == 'team':
+        team()
+        success = True
+    elif command == 'test':
+        success = test()
+    else:
+        usage_error()
+        success = False
+    if not success:
+        sys.exit(1)
+
+if __name__ == '__main__':
+    main()
