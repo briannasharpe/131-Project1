@@ -1,5 +1,5 @@
 #pragma once
-
+#include <iostream>
 #include <string>
 using namespace std;
 
@@ -11,46 +11,62 @@ private:
     bool _taxable;
 
 public:
-    GroceryItem();
-    GroceryItem(const string& n, const int& q, const float& p, const bool& t);
+	// default constructor
+    GroceryItem(){
+        _name = "";
+        _quantity = 0;
+        _unitPrice = 0;
+        _taxable = false;
+    }
 
+	GroceryItem(const string& n, const int& q, const float& up, const bool& t) {
+		_name = n;
+		_quantity = q;
+		_unitPrice = up;
+		_taxable = t;
+	}
+	
+	// Declaration
+	// function headers
     string getName() const;
-    void setName(const string&);
+    void setName(const string& n);
     int getQuantity() const;
-    void setQuantity(const int&);
+    void setQuantity(const int& q);
     float getUnitPrice() const;
-    void setUnitPrice(const float&);
+    void setUnitPrice(const float& up);
     bool isTaxable() const;
-    void setTaxable(const bool&);
-
+    void setTaxable(const bool& t);
 };
 
-
+//Function Definitions
+string GroceryItem::getName() const {
+	return _name;
+}
 
 void GroceryItem::setName(const string& n) {
-  _name = n;
+	_name = n;
 }
 
 int GroceryItem::getQuantity() const {
-  return _quantity;
+	return _quantity;
 }
 
 void GroceryItem::setQuantity(const int& q) {
-  _quantity = q;
+	_quantity = q;
 }
 
 float GroceryItem::getUnitPrice() const {
-  return _unitPrice;
+	return _unitPrice;
 }
 
-void GroceryItem::setUnitPrice(const float& u) {
-  _unitPrice = u;
+void GroceryItem::setUnitPrice(const float& up) {
+	_unitPrice = up;
 }
 
 bool GroceryItem::isTaxable() const {
-  _taxable = false; // ?
+	return _taxable;
 }
 
 void GroceryItem::setTaxable(const bool& t) {
-
+	_taxable = t;
 }
